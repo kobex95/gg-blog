@@ -1,4 +1,4 @@
-import { verifyToken, getTokenFromHeader } from '../src/lib/auth.js';
+import { verifyToken, getTokenFromHeader } from '../lib/auth.js';
 
 export default async function handler(request: Request) {
   const authHeader = request.headers.get('Authorization');

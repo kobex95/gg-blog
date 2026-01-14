@@ -145,7 +145,7 @@ loading = false;
   let searchTimeout: NodeJS.Timeout;
 
   searchInput?.addEventListener('input', (e) => {
-    const searchTerm = e.target.value;
+    const searchTerm = (e.target as HTMLInputElement)?.value;
     
     clearTimeout(searchTimeout);
     

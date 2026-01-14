@@ -1,5 +1,5 @@
-import client from '../src/lib/db.js';
-import { verifyPassword, generateToken } from '../src/lib/auth.js';
+import client from '../lib/db.js';
+import { verifyPassword, generateToken } from '../lib/auth.js';
 
 export default async function handler(request: Request) {
   if (request.method !== 'POST') {

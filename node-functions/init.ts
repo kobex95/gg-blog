@@ -3,7 +3,7 @@
  * 访问 /api/init 来初始化数据库
  */
 
-import { initializeDatabase } from '../src/lib/init-db.js';
+import { initializeDatabase } from './lib/init-db.js';
 
 export default async function handler(request: Request) {
   if (request.method !== 'POST') {

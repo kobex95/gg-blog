@@ -116,9 +116,9 @@ loading = false;
   <script>
     const twikooEnvId = import.meta.env.PUBLIC_TWIKOO_ENV_ID || 'your-twikoo-env-id';
     const twikooEl = document.getElementById('tcomment');
-    
+
     if (twikooEl && twikooEnvId !== 'your-twikoo-env-id') {
-      twikoo.init({
+      (window as any).twikoo.init({
         envId: twikooEnvId,
         el: '#tcomment',
         lang: 'zh-CN',

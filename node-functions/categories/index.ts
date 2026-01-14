@@ -1,4 +1,4 @@
-import client from '../src/lib/db.js';
+import client from '../lib/db.js';
 
 export async function GET(request: Request) {
   try {
