@@ -3,6 +3,8 @@ import Layout from '../../../layouts/Layout.astro';
 const { id } = Astro.params;
 const token = Astro.cookies.get('token')?.value;
 
+export const prerender = false;
+
 if (!token) {
   return Astro.redirect('/admin');
 }
