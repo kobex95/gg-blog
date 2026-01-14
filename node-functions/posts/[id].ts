@@ -1,7 +1,7 @@
 import client from '../lib/db.js';
 import { verifyToken, getTokenFromHeader } from '../lib/auth.js';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
     const result = await client.execute({
       sql: `

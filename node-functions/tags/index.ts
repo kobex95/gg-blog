@@ -1,6 +1,6 @@
 import client from '../lib/db.js';
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const result = await client.execute({
       sql: 'SELECT * FROM tags ORDER BY post_count DESC',
