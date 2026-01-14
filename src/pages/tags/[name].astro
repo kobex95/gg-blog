@@ -1,0 +1,94 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const { name } = Astro.params;
+
+interface Post {
+  id: number;
+  title: string;
+  excerpt: string;
+  created_at: string;
+  author_name: string;
+  category: string;
+  tags: string;
+}
+
+let posts: Post[] = [];
+let loading = true;
+let error: string | null = null;
+
+try {
+  const response = await fetch(`/api/posts?tag=${encodeURIComponent(name)}`);
+  const data = await response.json();
+  if (data.success) {
+    posts = data.posts;
+  } else {
+    error = data.error || '加载文章失败';
+  }
+} catch (e) {
+  error = '网络错误，请稍后重试';
+  console.error(e);
+}
+
+loading = false;
+---
+
+<Layout title={`标签: ${name}`}>
+  <div class="container py-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">标签: #{name}</h1>
+        <p class="text-gray-600">共 {posts.length} 篇文章</p>
+      </div>
+
+      {loading && (
+        <div class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p class="mt-4 text-gray-600">加载中...</p>
+        </div>
+      )}
+
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && posts.length === 0 && (
+        <div class="text-center py-12 bg-white rounded-lg shadow">
+          <p class="text-gray-600">暂无该标签的文章</p>
+        </div>
+      )}
+
+      {!loading && !error && posts.length > 0 && (
+        <div class="space-y-6">
+          {posts.map((post) => (
+            <article class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6">
+              <h2 class="text-2xl font-bold text-gray-900 mb-3">
+                <a href={`/post/${post.id}`} class="hover:text-primary-600">
+                  {post.title}
+                </a>
+              </h2>
+              <div class="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                <span>{new Date(post.created_at).toLocaleDateString('zh-CN')}</span>
+                {post.category && (
+                  <>
+                    <span>·</span>
+                    <a href={`/categories/${encodeURIComponent(post.category)}`} class="hover:text-primary-600">
+                      {post.category}
+                    </a>
+                  </>
+                )}
+                <span>·</span>
+                <span>{post.author_name || '匿名'}</span>
+              </div>
+              {post.excerpt && (
+                <p class="text-gray-700 mb-4 line-clamp-3">{post.excerpt}</p>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

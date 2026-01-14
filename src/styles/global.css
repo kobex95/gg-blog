@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* Twikoo评论样式 */
+#tcomment {
+  padding: 2rem 0;
+}
+
+#tcomment .twikoo-card {
+  @apply shadow-none;
+}
+
+#tcomment .twikoo-card .tk-content {
+  padding: 0;
+}
+
+#tcomment .tk-input {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+}
+
+#tcomment .tk-submit {
+  @apply bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors;
+}

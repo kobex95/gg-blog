@@ -1,0 +1,40 @@
+{
+  "name": "edgeone-blog",
+  "version": "1.0.0",
+  "description": "基于Astro和EdgeOne Pages的博客系统",
+  "framework": "astro",
+  "build": {
+    "command": "npm run build",
+    "output": "dist"
+  },
+  "env": {
+    "TURSO_DATABASE_URL": {
+      "description": "Turso数据库连接URL",
+      "required": true
+    },
+    "TURSO_AUTH_TOKEN": {
+      "description": "Turso数据库认证令牌",
+      "required": true
+    },
+    "JWT_SECRET": {
+      "description": "JWT密钥（请使用强随机字符串）",
+      "required": true
+    },
+    "ADMIN_USERNAME": {
+      "description": "管理员用户名",
+      "default": "admin"
+    },
+    "ADMIN_PASSWORD": {
+      "description": "管理员密码（生产环境请修改）",
+      "required": true
+    },
+    "PUBLIC_TWIKOO_ENV_ID": {
+      "description": "Twikoo评论系统环境ID",
+      "required": false
+    }
+  },
+  "node_functions": {
+    "enabled": true,
+    "runtime": "nodejs18"
+  }
+}

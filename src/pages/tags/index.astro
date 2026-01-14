@@ -1,0 +1,71 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+interface Tag {
+  name: string;
+  slug: string;
+  post_count: number;
+}
+
+let tags: Tag[] = [];
+let loading = true;
+let error: string | null = null;
+
+try {
+  const response = await fetch('/api/tags');
+  const data = await response.json();
+  if (data.success) {
+    tags = data.tags;
+  } else {
+    error = data.error || '加载标签失败';
+  }
+} catch (e) {
+  error = '网络错误，请稍后重试';
+  console.error(e);
+}
+
+loading = false;
+---
+
+<Layout title="标签">
+  <div class="container py-8">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8">所有标签</h1>
+
+      {loading && (
+        <div class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p class="mt-4 text-gray-600">加载中...</p>
+        </div>
+      )}
+
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && tags.length === 0 && (
+        <div class="text-center py-12 bg-white rounded-lg shadow">
+          <p class="text-gray-600">暂无标签</p>
+        </div>
+      )}
+
+      {!loading && !error && tags.length > 0 && (
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex flex-wrap gap-3">
+            {tags.map((tag) => (
+              <a
+                href={`/tags/${encodeURIComponent(tag.name)}`}
+                class="inline-flex items-center px-4 py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors"
+              >
+                <span class="font-medium">#{tag.name}</span>
+                <span class="ml-2 text-sm text-primary-600">({tag.post_count})</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
