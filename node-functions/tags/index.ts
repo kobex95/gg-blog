@@ -2,8 +2,9 @@ import client from '../lib/db.js';
 
 export async function GET(_request: Request) {
   try {
-    const result = await client.execute({
+    await client.execute({
       sql: 'SELECT * FROM tags ORDER BY post_count DESC',
+      args: [],
     });
 
     // 同时从posts中获取所有标签
@@ -15,6 +16,7 @@ export async function GET(_request: Request) {
         WHERE tags IS NOT NULL AND tags != ''
         ORDER BY tag
       `,
+      args: [],
     });
 
     // 解析和统计标签

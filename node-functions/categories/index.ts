@@ -12,6 +12,7 @@ export async function GET(_request: Request) {
         GROUP BY category
         ORDER BY post_count DESC
       `,
+      args: [],
     });
 
     return Response.json({

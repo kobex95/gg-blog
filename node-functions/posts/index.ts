@@ -49,14 +49,17 @@ export async function GET(request: Request) {
       args,
     });
 
+    const total = (countResult.rows[0] as any).total;
+    const totalPages = Math.ceil(Number(total) / limit);
+
     return Response.json({
       success: true,
       posts: postsResult.rows,
       pagination: {
         page,
         limit,
-        total: countResult.rows[0].total,
-        totalPages: Math.ceil(countResult.rows[0].total / limit),
+        total: total,
+        totalPages: totalPages,
       },
     });
   } catch (error) {
@@ -71,7 +74,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const authHeader = request.headers.get('Authorization');
   const token = getTokenFromHeader(authHeader);
-  const payload = verifyToken(token);
+  const payload = verifyToken(token || '');
 
   if (!payload) {
     return Response.json(

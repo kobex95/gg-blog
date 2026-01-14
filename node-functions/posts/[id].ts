@@ -38,7 +38,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const authHeader = request.headers.get('Authorization');
   const token = getTokenFromHeader(authHeader);
-  const payload = verifyToken(token);
+  const payload = verifyToken(token || '');
 
   if (!payload) {
     return Response.json(
@@ -84,7 +84,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const authHeader = request.headers.get('Authorization');
   const token = getTokenFromHeader(authHeader);
-  const payload = verifyToken(token);
+  const payload = verifyToken(token || '');
 
   if (!payload) {
     return Response.json(
