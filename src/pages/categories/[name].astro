@@ -1,6 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
+export function getStaticPaths() {
+  return [];
+}
+
 const { name } = Astro.params;
 
 interface Post {
