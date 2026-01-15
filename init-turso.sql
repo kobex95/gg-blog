@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- 2. 创建 categories 表
 CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
+  name TEXT UNIQUE NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   description TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -75,17 +75,15 @@ CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
 
 -- 8. 插入默认分类
-INSERT INTO categories (name, slug, description) VALUES
+INSERT OR IGNORE INTO categories (name, slug, description) VALUES
   ('技术', 'tech', '技术相关文章'),
   ('生活', 'life', '生活随笔'),
-  ('阅读', 'reading', '读书笔记')
-ON CONFLICT(name) DO NOTHING;
+  ('阅读', 'reading', '读书笔记');
 
 -- 9. 插入默认标签
-INSERT INTO tags (name, slug) VALUES
+INSERT OR IGNORE INTO tags (name, slug) VALUES
   ('JavaScript', 'javascript'),
   ('TypeScript', 'typescript'),
   ('React', 'react'),
   ('Vue', 'vue'),
-  ('Astro', 'astro')
-ON CONFLICT(name) DO NOTHING;
+  ('Astro', 'astro');
