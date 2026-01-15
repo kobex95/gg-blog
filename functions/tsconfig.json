@@ -2,7 +2,10 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "..",
-    "module": "commonjs",
+    "module": "es2022",
+    "moduleResolution": "node",
+    "target": "es2022",
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
       "@/*": ["./src/*"]
