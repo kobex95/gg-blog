@@ -1,8 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-// 简单的 TypeScript 编译器（使用 tsc）
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 console.log('开始编译 functions 目录的 TypeScript 文件...');
 
