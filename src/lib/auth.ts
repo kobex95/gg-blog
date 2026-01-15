@@ -2,9 +2,29 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { db } from './db';
 
-const JWT_SECRET = typeof process !== 'undefined' && process.env?.JWT_SECRET
-  ? process.env.JWT_SECRET
-  : import.meta.env.VITE_JWT_SECRET || 'your-secret-key-change-this-in-production';
+// 从环境变量读取
+function getEnvValue(key: string): string {
+  if (typeof process !== 'undefined' && process.env) {
+    const value = process.env[key] || process.env[`VITE_${key}`] || '';
+    if (value) {
+      console.log(`从 process.env 读取到 ${key}`);
+      return value;
+    }
+  }
+
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    const value = import.meta.env[`VITE_${key}`] || '';
+    if (value) {
+      console.log(`从 import.meta.env 读取到 ${key}`);
+      return value;
+    }
+  }
+
+  console.warn(`环境变量 ${key} 未设置，使用默认值`);
+  return 'your-secret-key-change-this-in-production';
+}
+
+const JWT_SECRET = getEnvValue('JWT_SECRET');
 
 export interface User {
   id: number;
