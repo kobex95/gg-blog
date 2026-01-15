@@ -5,7 +5,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function onRequestGet({ request }) {
+export async function onRequestGet({ request }: { request: Request }) {
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || '';
@@ -38,15 +38,15 @@ export async function onRequestGet({ request }) {
     const postIds = posts?.map(p => p.id) || [];
     const { data: postTags } = await supabase
       .from('post_tags')
-      .select('post_id, tags(name, slug)')
+      .select('post_id, tags!inner(name, slug)')
       .in('post_id', postIds);
 
     // 组合标签到文章
     const postsWithTags = posts?.map(post => ({
       ...post,
       tags: postTags
-        ?.filter(pt => pt.post_id === post.id)
-        .map(pt => pt.tags?.name)
+        ?.filter((pt: any) => pt.post_id === post.id)
+        .map((pt: any) => pt.tags?.name)
         .filter(Boolean)
         .join(',') || ''
     })) || [];
@@ -70,7 +70,7 @@ export async function onRequestGet({ request }) {
   }
 }
 
-export async function onRequestPost({ request }) {
+export async function onRequestPost({ request }: { request: Request }) {
   try {
     const { title, content, excerpt, category_id, tags, published } = await request.json();
 

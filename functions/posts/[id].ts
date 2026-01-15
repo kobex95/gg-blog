@@ -5,7 +5,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function onRequestGet({ params }) {
+export async function onRequestGet({ params }: { params: { id: string } }) {
   try {
     const { id } = params;
 
@@ -24,10 +24,10 @@ export async function onRequestGet({ params }) {
     // 获取标签
     const { data: postTags } = await supabase
       .from('post_tags')
-      .select('tags(name, slug)')
+      .select('tags!inner(name, slug)')
       .eq('post_id', id);
 
-    const tags = postTags?.map(pt => pt.tags?.name).filter(Boolean).join(',') || '';
+    const tags = postTags?.map((pt: any) => pt.tags?.name).filter(Boolean).join(',') || '';
 
     // 增加阅读量
     await supabase
@@ -53,10 +53,10 @@ export async function onRequestGet({ params }) {
   }
 }
 
-export async function onRequestPut({ request, params }) {
+export async function onRequestPut({ request, params }: { request: Request; params: { id: string } }) {
   try {
     const { id } = params;
-    const { title, content, excerpt, category_id, tags, published } = await request.json();
+    const { title, content, excerpt, category_id, published } = await request.json();
 
     const slug = title
       .toLowerCase()
@@ -93,7 +93,7 @@ export async function onRequestPut({ request, params }) {
   }
 }
 
-export async function onRequestDelete({ params }) {
+export async function onRequestDelete({ params }: { params: { id: string } }) {
   try {
     const { id } = params;
 
