@@ -149,7 +149,7 @@ export async function onRequestPost({ request }: { request: Request }) {
       ],
     });
 
-    const postId = result.meta.last_row_id;
+    const postId = (result as any).meta?.last_row_id || (result as any).rows[0]?.id;
 
     // 处理标签
     if (tags && tags.length > 0) {
@@ -173,7 +173,7 @@ export async function onRequestPost({ request }: { request: Request }) {
             sql: 'INSERT INTO tags (name, slug) VALUES (?, ?)',
             args: [tagName, tagSlug],
           });
-          tagId = newTagResult.meta.last_row_id;
+          tagId = (newTagResult as any).meta?.last_row_id || (newTagResult as any).rows[0]?.id;
         }
 
         // 关联文章和标签

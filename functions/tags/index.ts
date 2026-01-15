@@ -4,6 +4,7 @@ export async function onRequestGet() {
   try {
     const result = await db.execute({
       sql: 'SELECT id, name, slug FROM tags ORDER BY name',
+      args: [],
     });
 
     const tags = result.rows;

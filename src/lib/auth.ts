@@ -72,5 +72,12 @@ export async function getUserFromToken(authHeader: string | null): Promise<User 
     return null;
   }
 
-  return result.rows[0] as User;
+  const row = result.rows[0] as any;
+  return {
+    id: row.id,
+    username: row.username,
+    email: row.email,
+    role: row.role,
+    avatar_url: row.avatar_url,
+  };
 }

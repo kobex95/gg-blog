@@ -1,4 +1,4 @@
-import { db } from '../../../src/lib/db';
+import { db } from '@/lib/db';
 
 export async function onRequestGet({ params }: { params: { id: string } }) {
   try {

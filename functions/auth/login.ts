@@ -37,7 +37,7 @@ export async function onRequestPost({ request }: { request: Request }) {
       );
     }
 
-    const user = result.rows[0];
+    const user = result.rows[0] as any;
 
     // 验证密码
     const isValid = await verifyPassword(password, user.password_hash);

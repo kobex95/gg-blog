@@ -89,7 +89,7 @@ export async function onRequestPost({ request }: { request: Request }) {
       ],
     });
 
-    const userId = result.meta.last_row_id;
+    const userId = (result as any).meta?.last_row_id || (result as any).rows[0]?.id;
 
     // 生成 token
     const token = generateToken({
