@@ -15,8 +15,8 @@
   <script>
     const results = document.getElementById('results');
 
-    async function testAPI(url, method = 'GET', body = null) {
-      const options = {
+    async function testAPI(url: string, method = 'GET', body = null) {
+      const options: any = {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -46,9 +46,10 @@
           success: response.ok
         };
       } catch (error) {
+        const err = error as Error;
         return {
           url,
-          error: error.message || String(error),
+          error: err.message || String(error),
           success: false
         };
       }
@@ -79,7 +80,9 @@
         `;
       }
 
-      results.innerHTML = html;
+      if (results) {
+        results.innerHTML = html;
+      }
     }
 
     // 页面加载完成后执行测试
