@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { db } from './db';
 
 // 默认 JWT_SECRET
 const DEFAULT_JWT_SECRET = 'your-secret-key-change-this-in-production';
@@ -70,7 +69,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 // 从请求中获取用户
-export async function getUserFromToken(authHeader: string | null, dbClient = db): Promise<User | null> {
+export async function getUserFromToken(authHeader: string | null, dbClient: any): Promise<User | null> {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }

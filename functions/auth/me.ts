@@ -1,10 +1,14 @@
 import { getUserFromToken } from '../../src/lib/auth';
+import { getDbClient, getEnvFromContext } from '../../src/lib/db';
 
-export async function onRequestGet({ request }: { request: Request }) {
+export async function onRequestGet({ request, env }: { request: Request; env?: any }) {
   try {
     const authHeader = request.headers.get('Authorization');
 
-    const user = await getUserFromToken(authHeader);
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
+
+    const user = await getUserFromToken(authHeader, db);
 
     if (!user) {
       return new Response(
