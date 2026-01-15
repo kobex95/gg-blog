@@ -1,4 +1,5 @@
 import { db } from '../../src/lib/db';
+import { getUserFromToken } from '../../src/lib/auth';
 
 export async function onRequestGet({ request }: { request: Request }) {
   try {
@@ -92,6 +93,7 @@ export async function onRequestGet({ request }: { request: Request }) {
       JSON.stringify({
         success: false,
         error: '获取文章列表失败',
+        details: error instanceof Error ? error.message : String(error),
       }),
       {
         status: 500,
@@ -115,7 +117,7 @@ export async function onRequestPost({ request }: { request: Request }) {
 
     // 从请求中获取用户（简化版）
     const authHeader = request.headers.get('Authorization');
-    const user = await import('../../src/lib/auth.js').then(m => m.getUserFromToken(authHeader));
+    const user = await getUserFromToken(authHeader);
 
     if (!user) {
       return new Response(
