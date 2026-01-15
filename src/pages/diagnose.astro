@@ -1,0 +1,185 @@
+---
+---
+
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>系统诊断</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    .status {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .success { background: #d4edda; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    .warning { background: #fff3cd; border: 1px solid #ffeeba; }
+    .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+    .details {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    code {
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    ul { margin: 10px 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>🔍 系统诊断工具</h1>
+
+  <div id="results"></div>
+
+  <div class="details">
+    <h2>📋 环境变量检查</h2>
+    <ul>
+      <li><strong>VITE_TURSO_DATABASE_URL:</strong> <code id="env-db-url">检查中...</code></li>
+      <li><strong>VITE_TURSO_AUTH_TOKEN:</strong> <code id="env-auth-token">检查中...</code></li>
+      <li><strong>VITE_JWT_SECRET:</strong> <code id="env-jwt-secret">检查中...</code></li>
+    </ul>
+
+    <h2>🔌 API 端点测试</h2>
+    <ul>
+      <li><strong>Health Check:</strong> <span id="test-health">检查中...</span></li>
+      <li><strong>Posts API:</strong> <span id="test-posts">检查中...</span></li>
+      <li><strong>Categories API:</strong> <span id="test-categories">检查中...</span></li>
+      <li><strong>Tags API:</strong> <span id="test-tags">检查中...</span></li>
+    </ul>
+
+    <h2>❓ 可能的问题</h2>
+    <div class="status warning">
+      <strong>如果所有 API 都失败：</strong>
+      <ul>
+        <li>Turso 数据库未初始化（需要执行 init-turso.sql）</li>
+        <li>EdgeOne Pages 环境变量未配置</li>
+        <li>环境变量值不正确</li>
+      </ul>
+    </div>
+
+    <h2>📝 解决方案</h2>
+    <div class="status info">
+      <ol>
+        <li><strong>创建 Turso 数据库：</strong><br>
+          访问 <a href="https://turso.tech" target="_blank">https://turso.tech</a> 创建数据库
+        </li>
+        <li><strong>初始化数据库表：</strong><br>
+          在 Turso Shell 中执行 <code>init-turso.sql</code> 脚本
+        </li>
+        <li><strong>配置环境变量：</strong><br>
+          在 EdgeOne Pages 控制台添加环境变量
+        </li>
+        <li><strong>重新部署：</strong><br>
+          等待 EdgeOne Pages 自动重新构建
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    const results = document.getElementById('results');
+
+    async function testAPI(url) {
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          data = { error: text.substring(0, 200) };
+        }
+
+        return {
+          success: response.ok,
+          status: response.status,
+          data
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    }
+
+    async function checkEnvironment() {
+      const dbUrl = import.meta.env.VITE_TURSO_DATABASE_URL;
+      const authToken = import.meta.env.VITE_TURSO_AUTH_TOKEN;
+      const jwtSecret = import.meta.env.VITE_JWT_SECRET;
+
+      document.getElementById('env-db-url').textContent = 
+        dbUrl ? '✅ 已设置' : '❌ 未设置';
+      document.getElementById('env-auth-token').textContent = 
+        authToken ? '✅ 已设置' : '❌ 未设置';
+      document.getElementById('env-jwt-secret').textContent = 
+        jwtSecret ? '✅ 已设置' : '❌ 未设置';
+
+      if (!dbUrl || !authToken || !jwtSecret) {
+        results.innerHTML += `
+          <div class="status error">
+            <strong>❌ 环境变量缺失</strong>
+            <p>请配置 EdgeOne Pages 环境变量：</p>
+            <ul>
+              <li>VITE_TURSO_DATABASE_URL</li>
+              <li>VITE_TURSO_AUTH_TOKEN</li>
+              <li>VITE_JWT_SECRET</li>
+            </ul>
+          </div>
+        `;
+      } else {
+        results.innerHTML += `
+          <div class="status success">
+            <strong>✅ 环境变量已配置</strong>
+          </div>
+        `;
+      }
+    }
+
+    async function testAPIs() {
+      const tests = [
+        { name: 'Health', url: '/health', elementId: 'test-health' },
+        { name: 'Posts', url: '/posts', elementId: 'test-posts' },
+        { name: 'Categories', url: '/categories', elementId: 'test-categories' },
+        { name: 'Tags', url: '/tags', elementId: 'test-tags' },
+      ];
+
+      for (const test of tests) {
+        const element = document.getElementById(test.elementId);
+        const result = await testAPI(test.url);
+
+        if (result.success && result.status === 200 && result.data.success) {
+          element.innerHTML = `<span style="color: green;">✅ 正常 (${result.status} OK)</span>`;
+        } else {
+          element.innerHTML = `<span style="color: red;">❌ 失败 (${result.status})</span>`;
+          
+          if (result.data && result.data.error) {
+            element.innerHTML += `<br><small>${result.data.error}</small>`;
+          }
+        }
+      }
+    }
+
+    // 页面加载后执行检查
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkEnvironment();
+      await testAPIs();
+    });
+  </script>
+</body>
+</html>
