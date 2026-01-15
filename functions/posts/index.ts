@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://hjdtkumfdzodjwceqywv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZHRrdW1mZHpvZGp3Y2VxeXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2ODgzNTMsImV4cCI6MjA4MzI2NDM1M30.i3Q_fWxtStOMqk2i3YofeiXNrVKgltN66jNy9I7dtFQ';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { db } from '../../src/lib/db';
 
 export async function onRequestGet({ request }: { request: Request }) {
   try {
@@ -13,43 +8,70 @@ export async function onRequestGet({ request }: { request: Request }) {
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    let query = supabase
-      .from('posts')
-      .select(`
-        *,
-        author:profiles(username, avatar_url),
-        category:categories(name, slug)
-      `)
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let sql = `
+      SELECT
+        p.*,
+        u.username as author_name,
+        u.avatar_url as author_avatar,
+        c.name as category_name
+      FROM posts p
+      LEFT JOIN profiles u ON p.author_id = u.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.published = 1
+    `;
+
+    const args: any[] = [];
 
     if (search) {
-      query = query.ilike('title', `%${search}%`);
+      sql += ' AND p.title LIKE ?';
+      args.push(`%${search}%`);
     }
 
-    const { data: posts, error, count } = await query;
+    sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
+    args.push(limit, offset);
 
-    if (error) {
-      throw error;
+    const postsResult = await db.execute({ sql, args });
+
+    // 获取总数
+    let countSql = 'SELECT COUNT(*) as total FROM posts WHERE published = 1';
+    const countArgs: any[] = [];
+
+    if (search) {
+      countSql += ' AND title LIKE ?';
+      countArgs.push(`%${search}%`);
     }
+
+    const countResult = await db.execute({ sql: countSql, args: countArgs });
+    const total = countResult.rows[0].total as number;
 
     // 为每个文章获取标签
-    const postIds = posts?.map(p => p.id) || [];
-    const { data: postTags } = await supabase
-      .from('post_tags')
-      .select('post_id, tags!inner(name, slug)')
-      .in('post_id', postIds);
+    const postIds = postsResult.rows.map((p: any) => p.id);
+    const tagsResult = await db.execute({
+      sql: `
+        SELECT pt.post_id, t.name as tag_name
+        FROM post_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.post_id IN (${postIds.map(() => '?').join(',')})
+      `,
+      args: postIds,
+    });
 
     // 组合标签到文章
-    const postsWithTags = posts?.map(post => ({
-      ...post,
-      tags: postTags
-        ?.filter((pt: any) => pt.post_id === post.id)
-        .map((pt: any) => pt.tags?.name)
-        .filter(Boolean)
-        .join(',') || ''
-    })) || [];
+    const postsWithTags = postsResult.rows.map((post: any) => {
+      const postTags = tagsResult.rows
+        .filter((pt: any) => pt.post_id === post.id)
+        .map((pt: any) => pt.tag_name);
+
+      return {
+        ...post,
+        tags: postTags.join(','),
+        category: post.category_name || null,
+        author: {
+          username: post.author_name,
+          avatar_url: post.author_avatar,
+        },
+      };
+    });
 
     return new Response(JSON.stringify({
       success: true,
@@ -57,28 +79,32 @@ export async function onRequestGet({ request }: { request: Request }) {
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
-      }
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('获取文章列表失败:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: '获取文章列表失败'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: '获取文章列表失败',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
 export async function onRequestPost({ request }: { request: Request }) {
   try {
-    const { title, content, excerpt, category_id, tags, published } = await request.json();
+    const { title, content, excerpt, category_id, tags, published } =
+      await request.json();
 
     // 生成 slug
     const slug = title
@@ -87,86 +113,123 @@ export async function onRequestPost({ request }: { request: Request }) {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // 获取当前用户（简化版，实际需要从 session 获取）
-    const { data: { user } } = await supabase.auth.getUser();
+    // 从请求中获取用户（简化版）
+    const authHeader = request.headers.get('Authorization');
+    const user = await import('../../src/lib/auth.js').then(m => m.getUserFromToken(authHeader));
+
     if (!user) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: '未授权'
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: '未授权',
+        }),
+        {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // 创建文章
-    const { data: post, error } = await supabase
-      .from('posts')
-      .insert({
+    const result = await db.execute({
+      sql: `
+        INSERT INTO posts (title, slug, content, excerpt, category_id, author_id, published, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [
         title,
         slug,
         content,
-        excerpt,
-        category_id,
-        author_id: user.id,
-        published: published || false
-      })
-      .select()
-      .single();
+        excerpt || null,
+        category_id || null,
+        user.id,
+        published ? 1 : 0,
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ],
+    });
 
-    if (error) throw error;
+    const postId = result.meta.last_row_id;
 
     // 处理标签
     if (tags && tags.length > 0) {
       for (const tagName of tags) {
         // 查找或创建标签
-        const { data: existingTag } = await supabase
-          .from('tags')
-          .select('id')
-          .eq('name', tagName)
-          .single();
+        const tagResult = await db.execute({
+          sql: 'SELECT id FROM tags WHERE name = ?',
+          args: [tagName],
+        });
 
         let tagId;
-        if (existingTag) {
-          tagId = existingTag.id;
+        if (tagResult.rows.length > 0) {
+          tagId = tagResult.rows[0].id;
         } else {
           const tagSlug = tagName
             .toLowerCase()
             .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '-')
             .replace(/-+/g, '-');
 
-          const { data: newTag } = await supabase
-            .from('tags')
-            .insert({ name: tagName, slug: tagSlug })
-            .select('id')
-            .single();
-          tagId = newTag?.id;
+          const newTagResult = await db.execute({
+            sql: 'INSERT INTO tags (name, slug) VALUES (?, ?)',
+            args: [tagName, tagSlug],
+          });
+          tagId = newTagResult.meta.last_row_id;
         }
 
         // 关联文章和标签
         if (tagId) {
-          await supabase
-            .from('post_tags')
-            .insert({ post_id: post.id, tag_id: tagId });
+          await db.execute({
+            sql: 'INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)',
+            args: [postId, tagId],
+          });
         }
       }
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      post
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+    // 获取创建的文章
+    const postResult = await db.execute({
+      sql: `
+        SELECT
+          p.*,
+          u.username as author_name,
+          u.avatar_url as author_avatar,
+          c.name as category_name
+        FROM posts p
+        LEFT JOIN profiles u ON p.author_id = u.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.id = ?
+      `,
+      args: [postId],
     });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        post: {
+          ...postResult.rows[0],
+          category: postResult.rows[0].category_name || null,
+          author: {
+            username: postResult.rows[0].author_name,
+            avatar_url: postResult.rows[0].author_avatar,
+          },
+        },
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('创建文章失败:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: '创建文章失败'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: '创建文章失败',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }

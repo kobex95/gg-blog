@@ -1,61 +1,85 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://hjdtkumfdzodjwceqywv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZHRrdW1mZHpvZGp3Y2VxeXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2ODgzNTMsImV4cCI6MjA4MzI2NDM1M30.i3Q_fWxtStOMqk2i3YofeiXNrVKgltN66jNy9I7dtFQ';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { db } from '../../../src/lib/db';
 
 export async function onRequestGet({ params }: { params: { id: string } }) {
   try {
     const { id } = params;
 
-    const { data: post, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        author:profiles(username, avatar_url),
-        category:categories(name, slug)
-      `)
-      .eq('id', id)
-      .single();
+    const result = await db.execute({
+      sql: `
+        SELECT
+          p.*,
+          u.username as author_name,
+          u.avatar_url as author_avatar,
+          c.name as category_name
+        FROM posts p
+        LEFT JOIN profiles u ON p.author_id = u.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.id = ?
+      `,
+      args: [id],
+    });
 
-    if (error) throw error;
+    if (result.rows.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: '文章不存在',
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const post = result.rows[0];
 
     // 获取标签
-    const { data: postTags } = await supabase
-      .from('post_tags')
-      .select('tags!inner(name, slug)')
-      .eq('post_id', id);
+    const tagsResult = await db.execute({
+      sql: `
+        SELECT t.name
+        FROM post_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.post_id = ?
+      `,
+      args: [id],
+    });
 
-    const tags = postTags?.map((pt: any) => pt.tags?.name).filter(Boolean).join(',') || '';
+    const tags = tagsResult.rows.map((t: any) => t.name).join(',');
 
     // 增加阅读量
-    await supabase
-      .from('posts')
-      .update({ view_count: (post.view_count || 0) + 1 })
-      .eq('id', id);
-
-    return new Response(JSON.stringify({
-      success: true,
-      post: {
-        ...post,
-        tags,
-        category: post.category?.name || null,
-        author_name: post.author?.username || '匿名'
-      }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+    await db.execute({
+      sql: 'UPDATE posts SET view_count = view_count + 1 WHERE id = ?',
+      args: [id],
     });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        post: {
+          ...post,
+          tags,
+          category: post.category_name || null,
+          author_name: post.author_name || '匿名',
+        },
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('获取文章详情失败:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: '获取文章详情失败'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: '获取文章详情失败',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
@@ -70,38 +94,46 @@ export async function onRequestPut({ request, params }: { request: Request; para
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 
-    const { data: post, error } = await supabase
-      .from('posts')
-      .update({
+    const result = await db.execute({
+      sql: `
+        UPDATE posts
+        SET title = ?, slug = ?, content = ?, excerpt = ?, category_id = ?, published = ?, updated_at = ?
+        WHERE id = ?
+      `,
+      args: [
         title,
         slug,
         content,
-        excerpt,
-        category_id,
-        published: published || false
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return new Response(JSON.stringify({
-      success: true,
-      post
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+        excerpt || null,
+        category_id || null,
+        published ? 1 : 0,
+        new Date().toISOString(),
+        id,
+      ],
     });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        post: result.rows[0],
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('更新文章失败:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: '更新文章失败'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: '更新文章失败',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
@@ -109,28 +141,32 @@ export async function onRequestDelete({ params }: { params: { id: string } }) {
   try {
     const { id } = params;
 
-    const { error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-
-    return new Response(JSON.stringify({
-      success: true,
-      message: '文章已删除'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+    await db.execute({
+      sql: 'DELETE FROM posts WHERE id = ?',
+      args: [id],
     });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: '文章已删除',
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('删除文章失败:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: '删除文章失败'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: '删除文章失败',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
