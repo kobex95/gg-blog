@@ -1,8 +1,10 @@
-import { db } from '@/lib/db';
+import { getDbClient, getEnvFromContext } from '../../src/lib/db';
 
-export async function onRequestGet({ params }: { params: { id: string } }) {
+export async function onRequestGet({ params, env }: { params: { id: string }; env?: any }) {
   try {
     const { id } = params;
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
 
     const result = await db.execute({
       sql: `
@@ -83,9 +85,11 @@ export async function onRequestGet({ params }: { params: { id: string } }) {
   }
 }
 
-export async function onRequestPut({ request, params }: { request: Request; params: { id: string } }) {
+export async function onRequestPut({ request, params, env }: { request: Request; params: { id: string }; env?: any }) {
   try {
     const { id } = params;
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
     const { title, content, excerpt, category_id, published } = await request.json();
 
     const slug = title
@@ -137,9 +141,11 @@ export async function onRequestPut({ request, params }: { request: Request; para
   }
 }
 
-export async function onRequestDelete({ params }: { params: { id: string } }) {
+export async function onRequestDelete({ params, env }: { params: { id: string }; env?: any }) {
   try {
     const { id } = params;
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
 
     await db.execute({
       sql: 'DELETE FROM posts WHERE id = ?',

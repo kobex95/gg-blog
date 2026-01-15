@@ -74,6 +74,24 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 https://www.uuidgenerator.net/guid
 ```
 
+## 重要变更说明
+
+### 数据库初始化修复
+
+**问题**: 之前 `src/lib/db.ts` 中有自动初始化代码，会在模块加载时就尝试连接数据库，但在 EdgeOne Pages Functions 环境中可能导致错误。
+
+**修复**:
+1. 移除了 `export const db = getDbClient()` 自动初始化代码
+2. 所有 API 函数现在都通过 `getDbClient()` 和 `getEnvFromContext(env)` 动态创建数据库连接
+3. 修复了 `functions/posts/[id].ts` 中的导入问题
+
+**测试 API**:
+- `/simple-test`: 测试基本的函数执行和日志输出
+- `/test-import`: 测试 @libsql/client 的导入和客户端创建
+- `/test-db`: 测试完整的数据库连接和查询
+
+部署后建议先测试这些 API，确保功能正常后再测试其他功能。
+
 ## 本地开发
 
 ### 1. 设置环境变量
