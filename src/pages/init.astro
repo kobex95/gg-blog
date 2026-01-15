@@ -84,8 +84,8 @@ import Layout from '../layouts/Layout.astro';
       const password = formData.get('password') as string;
 
       try {
-        // 使用 Supabase Auth 注册
-        const response = await fetch('/auth/register', {
+        // 使用 API 注册
+        const response = await fetch('/api/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

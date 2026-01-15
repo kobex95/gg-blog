@@ -17,7 +17,7 @@ let loading = true;
 let error: string | null = null;
 
 try {
-  const response = await fetch('/posts');
+  const response = await fetch('/api/posts');
   const data = await response.json();
   if (data.success) {
     posts = data.posts;
@@ -152,7 +152,7 @@ loading = false;
     searchTimeout = setTimeout(async () => {
       if (searchTerm.length > 0) {
         try {
-          const response = await fetch(`/posts?search=${encodeURIComponent(searchTerm)}`);
+          const response = await fetch(`/api/posts?search=${encodeURIComponent(searchTerm)}`);
           const data = await response.json();
           
           if (data.success) {

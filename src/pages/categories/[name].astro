@@ -23,7 +23,7 @@ let loading = true;
 let error: string | null = null;
 
 try {
-  const response = await fetch(`/posts?category=${encodeURIComponent(category)}`);
+  const response = await fetch(`/api/posts?category=${encodeURIComponent(category)}`);
   const data = await response.json();
   if (data.success) {
     posts = data.posts;
