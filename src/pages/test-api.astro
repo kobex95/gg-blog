@@ -58,9 +58,12 @@
     async function runTests() {
       const tests = [
         { name: 'Health Check', url: '/health' },
-        { name: 'Posts List', url: '/posts' },
-        { name: 'Categories', url: '/categories' },
-        { name: 'Tags', url: '/tags' },
+        { name: 'Simple Test', url: '/simple-test' },
+        { name: 'Test API', url: '/test-api' },
+        { name: 'API Auth Register (根目录)', url: '/api-auth-register' },
+        { name: 'Auth Register (子目录)', url: '/auth/register' },
+        { name: 'Posts List (根目录)', url: '/posts' },
+        { name: 'Posts List (子目录)', url: '/api/posts' },
       ];
 
       let html = '<h2>测试结果：</h2>';
