@@ -3,11 +3,15 @@ import { getUserFromToken } from '../../src/lib/auth';
 
 export async function onRequestGet({ request }: { request: Request }) {
   try {
+    console.log('开始获取文章列表...');
+
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || '';
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
+
+    console.log('查询参数:', { search, page, limit, offset });
 
     let sql = `
       SELECT
@@ -31,7 +35,11 @@ export async function onRequestGet({ request }: { request: Request }) {
     sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
     args.push(limit, offset);
 
+    console.log('执行 SQL 查询:', sql);
+    console.log('查询参数:', args);
+
     const postsResult = await db.execute({ sql, args });
+    console.log('查询结果行数:', postsResult.rows.length);
 
     // 获取总数
     let countSql = 'SELECT COUNT(*) as total FROM posts WHERE published = 1';
@@ -44,18 +52,23 @@ export async function onRequestGet({ request }: { request: Request }) {
 
     const countResult = await db.execute({ sql: countSql, args: countArgs });
     const total = countResult.rows[0].total as number;
+    console.log('总数:', total);
 
     // 为每个文章获取标签
     const postIds = postsResult.rows.map((p: any) => p.id);
-    const tagsResult = await db.execute({
-      sql: `
-        SELECT pt.post_id, t.name as tag_name
-        FROM post_tags pt
-        JOIN tags t ON pt.tag_id = t.id
-        WHERE pt.post_id IN (${postIds.map(() => '?').join(',')})
-      `,
-      args: postIds,
-    });
+
+    let tagsResult: any = { rows: [] };
+    if (postIds.length > 0) {
+      tagsResult = await db.execute({
+        sql: `
+          SELECT pt.post_id, t.name as tag_name
+          FROM post_tags pt
+          JOIN tags t ON pt.tag_id = t.id
+          WHERE pt.post_id IN (${postIds.map(() => '?').join(',')})
+        `,
+        args: postIds,
+      });
+    }
 
     // 组合标签到文章
     const postsWithTags = postsResult.rows.map((post: any) => {
@@ -73,6 +86,8 @@ export async function onRequestGet({ request }: { request: Request }) {
         },
       };
     });
+
+    console.log('返回文章数:', postsWithTags.length);
 
     return new Response(JSON.stringify({
       success: true,

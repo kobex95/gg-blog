@@ -2,12 +2,15 @@ import { db } from '../../src/lib/db';
 
 export async function onRequestGet() {
   try {
+    console.log('开始获取标签列表...');
+
     const result = await db.execute({
       sql: 'SELECT id, name, slug FROM tags ORDER BY name',
       args: [],
     });
 
     const tags = result.rows;
+    console.log('查询到标签数:', tags.length);
 
     // 获取每个标签的文章数
     const tagsWithCount = await Promise.all(
@@ -40,6 +43,7 @@ export async function onRequestGet() {
       JSON.stringify({
         success: false,
         error: '获取标签列表失败',
+        details: error instanceof Error ? error.message : String(error),
       }),
       {
         status: 500,

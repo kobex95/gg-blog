@@ -2,12 +2,15 @@ import { db } from '../../src/lib/db';
 
 export async function onRequestGet() {
   try {
+    console.log('开始获取分类列表...');
+
     const result = await db.execute({
       sql: 'SELECT id, name, slug, description FROM categories ORDER BY name',
       args: [],
     });
 
     const categories = result.rows;
+    console.log('查询到分类数:', categories.length);
 
     // 获取每个分类的文章数
     const categoriesWithCount = await Promise.all(
@@ -40,6 +43,7 @@ export async function onRequestGet() {
       JSON.stringify({
         success: false,
         error: '获取分类列表失败',
+        details: error instanceof Error ? error.message : String(error),
       }),
       {
         status: 500,
