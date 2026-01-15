@@ -12,9 +12,9 @@
   <div id="results"></div>
 
   <script>
-    const results = document.getElementById('results');
+    const results = document.getElementById('results')!;
 
-    async function testAPI(url, method = 'GET', body = null) {
+    async function testAPI(url: string, method = 'GET', body = null) {
       const options: RequestInit = {
         method,
         headers: {

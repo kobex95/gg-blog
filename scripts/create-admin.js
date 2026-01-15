@@ -16,7 +16,6 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://hjdtkumfdzodjwceqywv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZHRrdW1mZHpvZGp3Y2VxeXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2ODgzNTMsImV4cCI6MjA4MzI2NDM1M30.i3Q_fWxtStOMqk2i3YofeiXNrVKgltN66jNy9I7dtFQ';
 
 // 注意：这个脚本需要使用 service_role key 才能创建用户
 // 你需要在 Supabase 控制台获取 service_role key

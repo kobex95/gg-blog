@@ -30,7 +30,7 @@ export async function onRequestPost({ request }: { request: Request }) {
     }
 
     // 检查用户名是否已存在
-    const { data: existingProfile, error: checkError } = await supabase
+    const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
       .eq('username', username)
