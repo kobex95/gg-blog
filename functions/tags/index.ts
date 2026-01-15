@@ -1,8 +1,11 @@
-import { db } from '../../src/lib/db';
+import { getDbClient, getEnvFromContext } from '../../src/lib/db';
 
-export async function onRequestGet() {
+export async function onRequestGet({ env }: { env?: any }) {
   try {
     console.log('开始获取标签列表...');
+
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
 
     const result = await db.execute({
       sql: 'SELECT id, name, slug FROM tags ORDER BY name',

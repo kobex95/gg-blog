@@ -1,9 +1,12 @@
-import { db } from '../../src/lib/db';
+import { getDbClient, getEnvFromContext } from '../../src/lib/db';
 import { hashPassword, generateToken } from '../../src/lib/auth';
 
-export async function onRequestPost({ request }: { request: Request }) {
+export async function onRequestPost({ request, env }: { request: Request; env?: any }) {
   try {
     console.log('开始注册...');
+
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, JWT_SECRET } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
 
     const { username, email, password, role = 'user' } = await request.json();
 
@@ -113,7 +116,7 @@ export async function onRequestPost({ request }: { request: Request }) {
       username: username,
       role: role,
       avatar_url: null,
-    });
+    }, JWT_SECRET);
 
     console.log('注册成功');
 

@@ -1,43 +1,50 @@
 import { createClient } from '@libsql/client';
 
-// 从环境变量读取（服务器端使用 process.env，EdgeOne Pages 支持）
-function getEnvValue(key: string): string {
-  // 尝试 process.env（服务器端）
-  if (typeof process !== 'undefined' && process.env) {
-    const value = process.env[key] || process.env[`VITE_${key}`] || '';
-    if (value) {
-      console.log(`从 process.env 读取到 ${key}:`, value.substring(0, 20) + '...');
-      return value;
-    }
-  }
+// EdgeOne Pages Functions 环境变量
+let TURSO_DATABASE_URL = '';
+let TURSO_AUTH_TOKEN = '';
 
-  // 尝试 import.meta.env（客户端构建）
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    const value = import.meta.env[`VITE_${key}`] || '';
-    if (value) {
-      console.log(`从 import.meta.env 读取到 ${key}:`, value.substring(0, 20) + '...');
-      return value;
-    }
-  }
-
-  console.warn(`环境变量 ${key} 未设置`);
-  return '';
+// 在 EdgeOne Pages 中，环境变量在运行时注入
+// 通过 global 或其他方式访问
+if (typeof global !== 'undefined' && global.process && global.process.env) {
+  TURSO_DATABASE_URL = global.process.env.TURSO_DATABASE_URL || global.process.env.VITE_TURSO_DATABASE_URL || '';
+  TURSO_AUTH_TOKEN = global.process.env.TURSO_AUTH_TOKEN || global.process.env.VITE_TURSO_AUTH_TOKEN || '';
+  console.log('从 global.process.env 读取环境变量');
+} else if (typeof process !== 'undefined' && process.env) {
+  TURSO_DATABASE_URL = process.env.TURSO_DATABASE_URL || process.env.VITE_TURSO_DATABASE_URL || '';
+  TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN || process.env.VITE_TURSO_AUTH_TOKEN || '';
+  console.log('从 process.env 读取环境变量');
 }
 
-const TURSO_DATABASE_URL = getEnvValue('TURSO_DATABASE_URL');
-const TURSO_AUTH_TOKEN = getEnvValue('TURSO_AUTH_TOKEN');
+// 如果仍然没有，尝试通过 API Context 传递的环境变量
+// 这需要在每个 API 函数中动态获取
 
-export function getDbClient() {
-  if (!TURSO_DATABASE_URL) {
-    throw new Error('TURSO_DATABASE_URL 环境变量未设置');
+export function getDbClient(dbUrl?: string, authToken?: string) {
+  // 优先使用传入的参数
+  const url = dbUrl || TURSO_DATABASE_URL;
+  const token = authToken || TURSO_AUTH_TOKEN;
+
+  if (!url) {
+    throw new Error('TURSO_DATABASE_URL 环境变量未设置。请检查 EdgeOne Pages 环境变量配置。');
   }
 
-  console.log('创建 Turso 客户端，URL:', TURSO_DATABASE_URL.substring(0, 20) + '...');
+  console.log('创建 Turso 客户端，URL:', url.substring(0, 20) + '...');
 
   return createClient({
-    url: TURSO_DATABASE_URL,
-    authToken: TURSO_AUTH_TOKEN || undefined,
+    url: url,
+    authToken: token || undefined,
   });
+}
+
+// 从上下文中获取环境变量（供 API 函数使用）
+export function getEnvFromContext(context: any): { TURSO_DATABASE_URL: string; TURSO_AUTH_TOKEN: string; JWT_SECRET: string } {
+  const env = context?.env || {};
+
+  return {
+    TURSO_DATABASE_URL: env.TURSO_DATABASE_URL || env.VITE_TURSO_DATABASE_URL || TURSO_DATABASE_URL,
+    TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN || env.VITE_TURSO_AUTH_TOKEN || TURSO_AUTH_TOKEN,
+    JWT_SECRET: env.JWT_SECRET || env.VITE_JWT_SECRET || 'default-secret-change-in-production',
+  };
 }
 
 // 类型定义

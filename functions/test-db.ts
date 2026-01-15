@@ -1,8 +1,11 @@
-import { db } from '../src/lib/db';
+import { getDbClient, getEnvFromContext } from '../src/lib/db';
 
-export async function onRequestGet() {
+export async function onRequestGet({ env }: { env?: any }) {
   try {
     console.log('测试数据库连接...');
+
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
 
     // 测试查询
     const result = await db.execute({
@@ -42,3 +45,4 @@ export async function onRequestGet() {
     );
   }
 }
+

@@ -1,8 +1,11 @@
-import { db } from '../../src/lib/db';
+import { getDbClient, getEnvFromContext } from '../../src/lib/db';
 import { verifyPassword, generateToken } from '../../src/lib/auth';
 
-export async function onRequestPost({ request }: { request: Request }) {
+export async function onRequestPost({ request, env }: { request: Request; env?: any }) {
   try {
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, JWT_SECRET } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
+
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -61,7 +64,7 @@ export async function onRequestPost({ request }: { request: Request }) {
       username: user.username,
       role: user.role,
       avatar_url: user.avatar_url,
-    });
+    }, JWT_SECRET);
 
     return new Response(
       JSON.stringify({

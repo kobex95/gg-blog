@@ -1,9 +1,12 @@
-import { db } from '../../src/lib/db';
+import { getDbClient, getEnvFromContext } from '../../src/lib/db';
 import { getUserFromToken } from '../../src/lib/auth';
 
-export async function onRequestGet({ request }: { request: Request }) {
+export async function onRequestGet({ request, env }: { request: Request; env?: any }) {
   try {
     console.log('开始获取文章列表...');
+
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
 
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || '';
@@ -118,8 +121,11 @@ export async function onRequestGet({ request }: { request: Request }) {
   }
 }
 
-export async function onRequestPost({ request }: { request: Request }) {
+export async function onRequestPost({ request, env }: { request: Request; env?: any }) {
   try {
+    const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = getEnvFromContext(env);
+    const db = getDbClient(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN);
+
     const { title, content, excerpt, category_id, tags, published } =
       await request.json();
 
@@ -132,7 +138,7 @@ export async function onRequestPost({ request }: { request: Request }) {
 
     // 从请求中获取用户（简化版）
     const authHeader = request.headers.get('Authorization');
-    const user = await getUserFromToken(authHeader);
+    const user = await getUserFromToken(authHeader, db);
 
     if (!user) {
       return new Response(

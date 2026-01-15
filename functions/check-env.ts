@@ -1,25 +1,27 @@
-export async function onRequestGet() {
-  // 尝试多种方式读取环境变量
-  const processEnv = typeof process !== 'undefined' ? process : null;
-  const allEnvKeys = processEnv?.env ? Object.keys(processEnv.env).filter(k => k.includes('TURSO') || k.includes('JWT')) : [];
+export async function onRequestGet({ env }: { env?: any }) {
+  console.log('上下文对象:', JSON.stringify(Object.keys(env || {})));
 
-  // 尝试读取
-  const env = {
+  // 尝试从上下文读取环境变量
+  const contextEnv = env || {};
+
+  const result = {
     'process defined': typeof process !== 'undefined',
-    'process.env defined': processEnv?.env !== undefined,
-    'TURSO_DATABASE_URL (process.env)': processEnv?.env?.TURSO_DATABASE_URL ? '✅ 已设置' : '❌ 未设置',
-    'TURSO_AUTH_TOKEN (process.env)': processEnv?.env?.TURSO_AUTH_TOKEN ? '✅ 已设置' : '❌ 未设置',
-    'JWT_SECRET (process.env)': processEnv?.env?.JWT_SECRET ? '✅ 已设置' : '❌ 未设置',
-    'VITE_TURSO_DATABASE_URL (process.env)': processEnv?.env?.VITE_TURSO_DATABASE_URL ? '✅ 已设置' : '❌ 未设置',
-    'VITE_TURSO_AUTH_TOKEN (process.env)': processEnv?.env?.VITE_TURSO_AUTH_TOKEN ? '✅ 已设置' : '❌ 未设置',
-    'VITE_JWT_SECRET (process.env)': processEnv?.env?.VITE_JWT_SECRET ? '✅ 已设置' : '❌ 未设置',
-    '所有相关环境变量': allEnvKeys,
+    'global defined': typeof global !== 'undefined',
+    'global.process defined': typeof global !== 'undefined' && typeof global.process !== 'undefined',
+    'env object exists': env !== undefined,
+    'env object keys': Object.keys(contextEnv),
+    'TURSO_DATABASE_URL': contextEnv.TURSO_DATABASE_URL ? '✅ 已设置' : '❌ 未设置',
+    'TURSO_AUTH_TOKEN': contextEnv.TURSO_AUTH_TOKEN ? '✅ 已设置' : '❌ 未设置',
+    'JWT_SECRET': contextEnv.JWT_SECRET ? '✅ 已设置' : '❌ 未设置',
+    'VITE_TURSO_DATABASE_URL': contextEnv.VITE_TURSO_DATABASE_URL ? '✅ 已设置' : '❌ 未设置',
+    'VITE_TURSO_AUTH_TOKEN': contextEnv.VITE_TURSO_AUTH_TOKEN ? '✅ 已设置' : '❌ 未设置',
+    'VITE_JWT_SECRET': contextEnv.VITE_JWT_SECRET ? '✅ 已设置' : '❌ 未设置',
   };
 
   return new Response(
     JSON.stringify({
       success: true,
-      environment: env,
+      environment: result,
       message: '环境变量检查完成',
     }),
     {
