@@ -1,5 +1,5 @@
 import { db } from '../../src/lib/db';
-import { getUserFromToken, verifyPassword, generateToken } from '../../src/lib/auth';
+import { verifyPassword, generateToken } from '../../src/lib/auth';
 
 export async function onRequestPost({ request }: { request: Request }) {
   try {

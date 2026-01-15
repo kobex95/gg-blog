@@ -93,11 +93,11 @@
   <script>
     const results = document.getElementById('results');
 
-    async function testAPI(url) {
+    async function testAPI(url: string) {
       try {
         const response = await fetch(url);
         const text = await response.text();
-        
+
         let data;
         try {
           data = JSON.parse(text);
@@ -113,7 +113,7 @@
       } catch (error) {
         return {
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         };
       }
     }
@@ -123,31 +123,37 @@
       const authToken = import.meta.env.VITE_TURSO_AUTH_TOKEN;
       const jwtSecret = import.meta.env.VITE_JWT_SECRET;
 
-      document.getElementById('env-db-url').textContent = 
-        dbUrl ? '✅ 已设置' : '❌ 未设置';
-      document.getElementById('env-auth-token').textContent = 
-        authToken ? '✅ 已设置' : '❌ 未设置';
-      document.getElementById('env-jwt-secret').textContent = 
-        jwtSecret ? '✅ 已设置' : '❌ 未设置';
+      const dbUrlEl = document.getElementById('env-db-url');
+      const authTokenEl = document.getElementById('env-auth-token');
+      const jwtSecretEl = document.getElementById('env-jwt-secret');
+      const resultsEl = document.getElementById('results');
+
+      if (dbUrlEl) dbUrlEl.textContent = dbUrl ? '✅ 已设置' : '❌ 未设置';
+      if (authTokenEl) authTokenEl.textContent = authToken ? '✅ 已设置' : '❌ 未设置';
+      if (jwtSecretEl) jwtSecretEl.textContent = jwtSecret ? '✅ 已设置' : '❌ 未设置';
 
       if (!dbUrl || !authToken || !jwtSecret) {
-        results.innerHTML += `
-          <div class="status error">
-            <strong>❌ 环境变量缺失</strong>
-            <p>请配置 EdgeOne Pages 环境变量：</p>
-            <ul>
-              <li>VITE_TURSO_DATABASE_URL</li>
-              <li>VITE_TURSO_AUTH_TOKEN</li>
-              <li>VITE_JWT_SECRET</li>
-            </ul>
-          </div>
-        `;
+        if (resultsEl) {
+          resultsEl.innerHTML += `
+            <div class="status error">
+              <strong>❌ 环境变量缺失</strong>
+              <p>请配置 EdgeOne Pages 环境变量：</p>
+              <ul>
+                <li>VITE_TURSO_DATABASE_URL</li>
+                <li>VITE_TURSO_AUTH_TOKEN</li>
+                <li>VITE_JWT_SECRET</li>
+              </ul>
+            </div>
+          `;
+        }
       } else {
-        results.innerHTML += `
-          <div class="status success">
-            <strong>✅ 环境变量已配置</strong>
-          </div>
-        `;
+        if (resultsEl) {
+          resultsEl.innerHTML += `
+            <div class="status success">
+              <strong>✅ 环境变量已配置</strong>
+            </div>
+          `;
+        }
       }
     }
 
@@ -163,13 +169,15 @@
         const element = document.getElementById(test.elementId);
         const result = await testAPI(test.url);
 
-        if (result.success && result.status === 200 && result.data.success) {
-          element.innerHTML = `<span style="color: green;">✅ 正常 (${result.status} OK)</span>`;
-        } else {
-          element.innerHTML = `<span style="color: red;">❌ 失败 (${result.status})</span>`;
-          
-          if (result.data && result.data.error) {
-            element.innerHTML += `<br><small>${result.data.error}</small>`;
+        if (element) {
+          if (result.success && result.status === 200 && result.data.success) {
+            element.innerHTML = `<span style="color: green;">✅ 正常 (${result.status} OK)</span>`;
+          } else {
+            element.innerHTML = `<span style="color: red;">❌ 失败 (${result.status})</span>`;
+
+            if (result.data && result.data.error) {
+              element.innerHTML += `<br><small>${result.data.error}</small>`;
+            }
           }
         }
       }
