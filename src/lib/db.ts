@@ -2,7 +2,10 @@ import { createClient } from '@libsql/client';
 
 // 从上下文中获取环境变量（供 API 函数使用）
 export function getEnvFromContext(context: any): { TURSO_DATABASE_URL: string; TURSO_AUTH_TOKEN: string; JWT_SECRET: string } {
-  const env = context?.env || {};
+  // 支持两种调用方式：
+  // 1. getEnvFromContext(env) - 直接传入 env 对象
+  // 2. getEnvFromContext({ env }) - 传入完整上下文
+  const env = context?.env || context || {};
 
   console.log('getEnvFromContext: env keys:', Object.keys(env).filter(k => k.includes('TURSO') || k.includes('JWT')));
 
