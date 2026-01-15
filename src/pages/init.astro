@@ -85,7 +85,7 @@ import Layout from '../layouts/Layout.astro';
 
       try {
         // 使用 Supabase Auth 注册
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch('/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

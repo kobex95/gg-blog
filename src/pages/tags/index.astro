@@ -12,7 +12,7 @@ let loading = true;
 let error: string | null = null;
 
 try {
-  const response = await fetch('/api/tags');
+  const response = await fetch('/tags');
   const data = await response.json();
   if (data.success) {
     tags = data.tags;

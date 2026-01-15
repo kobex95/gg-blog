@@ -23,7 +23,7 @@ let loading = true;
 let error: string | null = null;
 
 try {
-  const response = await fetch(`/api/posts?tag=${encodeURIComponent(tag)}`);
+  const response = await fetch(`/posts?tag=${encodeURIComponent(tag)}`);
   const data = await response.json();
   if (data.success) {
     posts = data.posts;
