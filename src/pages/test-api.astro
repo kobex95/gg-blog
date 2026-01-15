@@ -8,14 +8,15 @@
 </head>
 <body>
   <h1>API 测试页面</h1>
+  <p>页面加载中，正在测试 API...</p>
 
   <div id="results"></div>
 
   <script>
-    const results = document.getElementById('results')!;
+    const results = document.getElementById('results');
 
-    async function testAPI(url: string, method = 'GET', body = null) {
-      const options: RequestInit = {
+    async function testAPI(url, method = 'GET', body = null) {
+      const options = {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -33,7 +34,7 @@
 
         try {
           data = JSON.parse(text);
-        } catch {
+        } catch (e) {
           data = { raw_response: text.substring(0, 500) };
         }
 
@@ -47,7 +48,7 @@
       } catch (error) {
         return {
           url,
-          error: error instanceof Error ? error.message : String(error),
+          error: error.message || String(error),
           success: false
         };
       }
@@ -81,7 +82,10 @@
       results.innerHTML = html;
     }
 
-    runTests();
+    // 页面加载完成后执行测试
+    document.addEventListener('DOMContentLoaded', function() {
+      runTests();
+    });
   </script>
 
   <style>
