@@ -1,8 +1,13 @@
 import { createClient } from '@libsql/client';
 
-// 从环境变量或直接使用配置
-const TURSO_DATABASE_URL = import.meta.env.VITE_TURSO_DATABASE_URL || '';
-const TURSO_AUTH_TOKEN = import.meta.env.VITE_TURSO_AUTH_TOKEN || '';
+// 从环境变量读取（服务器端使用 process.env）
+const TURSO_DATABASE_URL = typeof process !== 'undefined' && process.env?.TURSO_DATABASE_URL
+  ? process.env.TURSO_DATABASE_URL
+  : import.meta.env.VITE_TURSO_DATABASE_URL || '';
+
+const TURSO_AUTH_TOKEN = typeof process !== 'undefined' && process.env?.TURSO_AUTH_TOKEN
+  ? process.env.TURSO_AUTH_TOKEN
+  : import.meta.env.VITE_TURSO_AUTH_TOKEN || '';
 
 export function getDbClient() {
   if (!TURSO_DATABASE_URL) {

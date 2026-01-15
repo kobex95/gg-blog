@@ -2,7 +2,9 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { db } from './db';
 
-const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || 'your-secret-key-change-this-in-production';
+const JWT_SECRET = typeof process !== 'undefined' && process.env?.JWT_SECRET
+  ? process.env.JWT_SECRET
+  : import.meta.env.VITE_JWT_SECRET || 'your-secret-key-change-this-in-production';
 
 export interface User {
   id: number;

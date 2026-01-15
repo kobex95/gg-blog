@@ -49,10 +49,10 @@
 在 EdgeOne Pages 控制台添加以下环境变量：
 
 ```bash
-# 必需
-VITE_TURSO_DATABASE_URL=libsql://your-database-url.turso.io
-VITE_TURSO_AUTH_TOKEN=your-auth-token
-VITE_JWT_SECRET=your-secure-secret-key
+# 必需（服务器端使用，不需要 VITE_ 前缀）
+TURSO_DATABASE_URL=libsql://your-database-url.turso.io
+TURSO_AUTH_TOKEN=your-auth-token
+JWT_SECRET=your-secure-secret-key
 
 # 可选
 PUBLIC_TWIKOO_ENV_ID=your-twikoo-env-id
