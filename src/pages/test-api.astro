@@ -1,0 +1,92 @@
+---
+---
+
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>API 测试</title>
+</head>
+<body>
+  <h1>API 测试页面</h1>
+
+  <div id="results"></div>
+
+  <script>
+    const results = document.getElementById('results');
+
+    async function testAPI(url, method = 'GET', body = null) {
+      const options: RequestInit = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+
+      try {
+        const response = await fetch(url, options);
+        const text = await response.text();
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { raw_response: text.substring(0, 500) };
+        }
+
+        return {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          data,
+          success: response.ok
+        };
+      } catch (error) {
+        return {
+          url,
+          error: error instanceof Error ? error.message : String(error),
+          success: false
+        };
+      }
+    }
+
+    async function runTests() {
+      const tests = [
+        { name: 'Health Check', url: '/api/health' },
+        { name: 'Posts List', url: '/api/posts' },
+        { name: 'Categories', url: '/api/categories' },
+        { name: 'Tags', url: '/api/tags' },
+      ];
+
+      let html = '<h2>测试结果：</h2>';
+
+      for (const test of tests) {
+        const result = await testAPI(test.url);
+        const statusClass = result.success ? 'success' : 'error';
+
+        html += `
+          <div class="${statusClass}" style="padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+            <h3>${test.name}</h3>
+            <p><strong>URL:</strong> ${result.url}</p>
+            ${result.status ? `<p><strong>Status:</strong> ${result.status} ${result.statusText}</p>` : ''}
+            <p><strong>Result:</strong></p>
+            <pre style="background: #f5f5f5; padding: 10px; overflow-x: auto;">${JSON.stringify(result.data || result.error, null, 2)}</pre>
+          </div>
+        `;
+      }
+
+      results.innerHTML = html;
+    }
+
+    runTests();
+  </script>
+
+  <style>
+    .success { border-color: #4caf50 !important; background: #e8f5e9; }
+    .error { border-color: #f44336 !important; background: #ffebee; }
+  </style>
+</body>
+</html>
