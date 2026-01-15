@@ -51,7 +51,7 @@ export async function onRequestGet({ request }: { request: Request }) {
         .join(',') || ''
     })) || [];
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       posts: postsWithTags,
       pagination: {
@@ -60,13 +60,19 @@ export async function onRequestGet({ request }: { request: Request }) {
         total: count || 0,
         totalPages: Math.ceil((count || 0) / limit)
       }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('获取文章列表失败:', error);
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: '获取文章列表失败'
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
@@ -84,10 +90,13 @@ export async function onRequestPost({ request }: { request: Request }) {
     // 获取当前用户（简化版，实际需要从 session 获取）
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return Response.json({
+      return new Response(JSON.stringify({
         success: false,
         error: '未授权'
-      }, { status: 401 });
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // 创建文章
@@ -143,15 +152,21 @@ export async function onRequestPost({ request }: { request: Request }) {
       }
     }
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       post
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('创建文章失败:', error);
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: '创建文章失败'
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

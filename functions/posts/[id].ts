@@ -35,7 +35,7 @@ export async function onRequestGet({ params }: { params: { id: string } }) {
       .update({ view_count: (post.view_count || 0) + 1 })
       .eq('id', id);
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       post: {
         ...post,
@@ -43,13 +43,19 @@ export async function onRequestGet({ params }: { params: { id: string } }) {
         category: post.category?.name || null,
         author_name: post.author?.username || '匿名'
       }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('获取文章详情失败:', error);
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: '获取文章详情失败'
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
@@ -80,16 +86,22 @@ export async function onRequestPut({ request, params }: { request: Request; para
 
     if (error) throw error;
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       post
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('更新文章失败:', error);
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: '更新文章失败'
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
@@ -104,15 +116,21 @@ export async function onRequestDelete({ params }: { params: { id: string } }) {
 
     if (error) throw error;
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       message: '文章已删除'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('删除文章失败:', error);
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: '删除文章失败'
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

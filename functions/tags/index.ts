@@ -29,15 +29,21 @@ export async function onRequestGet() {
       })
     );
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       tags: tagsWithCount
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('获取标签列表失败:', error);
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: '获取标签列表失败'
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
