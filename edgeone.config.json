@@ -7,6 +7,7 @@
     "command": "npm run build",
     "output": "dist"
   },
+  "functions": "functions",
   "env": {
     "TURSO_DATABASE_URL": {
       "description": "Turso数据库连接URL",
